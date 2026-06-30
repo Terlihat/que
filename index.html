@@ -52,18 +52,20 @@
         </nav>
 
         <div id="inputSection" class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 mb-6 transition-all">
-            <div class="flex items-center gap-2 mb-4">
-                <div class="w-2 h-6 bg-indigo-500 rounded-full"></div>
-                <h2 class="text-lg font-bold">Input Data <span id="inputCategoryName" class="text-indigo-500 italic">Rumah Tangga</span></h2>
-            </div>
-            <textarea id="rawInput" rows="6" class="w-full p-4 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 focus:ring-4 focus:ring-indigo-500/20 focus:outline-none font-mono text-sm dark:text-white text-slate-900" placeholder="Tempel 800+ baris data di sini..."></textarea>
-            
-            <div class="flex flex-wrap sm:flex-nowrap justify-between gap-3 mt-4">
-                <button id="btnLoadData" class="w-full sm:w-auto px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/30 transition cursor-pointer active:scale-95">
-                    MUAT DATA
+            <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-6 bg-indigo-500 rounded-full"></div>
+                    <h2 class="text-lg font-bold">Input Data <span id="inputCategoryName" class="text-indigo-500 italic">Rumah Tangga</span></h2>
+                </div>
+                <button onclick="handleImportTrigger()" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">
+                    <i class="fa-solid fa-upload mr-1"></i> Punya file cadangan (.json)? Impor di sini
                 </button>
-                <button id="btnInitImport" class="w-full sm:w-auto px-5 py-3 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl hover:bg-slate-300 dark:hover:bg-slate-600 transition cursor-pointer text-xs">
-                    <i class="fa-solid fa-upload mr-2"></i> PULIHKAN DARI FILE BACKUP
+            </div>
+            <textarea id="rawInput" rows="6" class="w-full p-4 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 focus:ring-4 focus:ring-indigo-500/20 focus:outline-none font-mono text-sm dark:text-white text-slate-900" placeholder="Tempel data baris untuk kategori ini di sini..."></textarea>
+            
+            <div class="flex flex-wrap gap-3 mt-4">
+                <button id="btnLoadData" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/30 transition cursor-pointer active:scale-95 text-sm">
+                    MUAT DATA KATEGORI INI
                 </button>
             </div>
         </div>
@@ -80,16 +82,16 @@
                 </div>
                 
                 <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                    <button id="btnExport" class="flex-1 sm:flex-none px-4 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-xl border border-slate-200 dark:border-slate-700 transition cursor-pointer text-xs" title="Amankan semua data ke file komputer">
-                        <i class="fa-solid fa-download mr-1.5 text-emerald-500"></i> EXPORT
+                    <button id="btnExport" class="flex-1 sm:flex-none px-4 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-xl border border-slate-200 dark:border-slate-700 transition cursor-pointer text-xs" title="Amankan seluruh sistem ke file komputer">
+                        <i class="fa-solid fa-download mr-1.5 text-emerald-500"></i> EXPORT ALL
                     </button>
-                    <button id="btnImport" class="flex-1 sm:flex-none px-4 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-xl border border-slate-200 dark:border-slate-700 transition cursor-pointer text-xs" title="Muat data lama dari file backup">
-                        <i class="fa-solid fa-upload mr-1.5 text-indigo-500"></i> IMPORT
+                    <button id="btnImport" class="flex-1 sm:flex-none px-4 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-xl border border-slate-200 dark:border-slate-700 transition cursor-pointer text-xs" title="Muat file cadangan global">
+                        <i class="fa-solid fa-upload mr-1.5 text-indigo-500"></i> IMPORT BACKUP
                     </button>
                     <input type="file" id="fileImport" class="hidden" accept=".json">
 
                     <button id="btnClear" class="w-full sm:w-auto px-5 py-3 bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 font-bold rounded-xl border border-rose-100 dark:border-rose-900 transition hover:bg-rose-600 hover:text-white cursor-pointer text-xs">
-                        <i class="fa-solid fa-trash-can mr-1.5"></i> GANTI DATA
+                        <i class="fa-solid fa-trash-can mr-1.5"></i> GANTI DATA KATEGORI INI
                     </button>
                 </div>
             </div>
@@ -114,7 +116,7 @@
     </div>
 
     <script>
-        // --- DATA STRUCTURE V4.1 (STABIL + MODUL BACKUP JSON) ---
+        // --- DATA STRUCTURE V4.2 ---
         let appState = {
             currentTab: 'rumah_tangga',
             tabs: { rumah_tangga: [], usaha_micro: [], verifikasi: [], opsi_lain: [] },
@@ -163,14 +165,14 @@
         function updateTimestamp() {
             const now = new Date();
             const time = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            saveIndicator.textContent = `Tersimpan otomatis ke baris bawah (${getTodayString()} ${time})`;
+            saveIndicator.textContent = `Penyimpanan Otomatis Aktif (${getTodayString()} ${time})`;
         }
 
         // --- NAVIGATION LOGIC ---
         window.switchTab = function(tabKey) {
             appState.currentTab = tabKey;
             updateTabUI();
-            checkDisplayMode();
+            checkDisplayMode(); // Memeriksa ketersediaan data khusus untuk tab baru yang dibuka
             saveState();
         }
 
@@ -188,16 +190,17 @@
             inputCategoryName.textContent = categories[appState.currentTab];
         }
 
+        // PERBAIKAN UTAMA: Mengisolasi deteksi layar berdasarkan kategori aktif saja!
         function checkDisplayMode() {
             const currentTabData = appState.tabs[appState.currentTab];
-            // Cek apakah ada data di salah satu tab manapun untuk mengaktifkan dashboard
-            const hasAnyData = Object.values(appState.tabs).some(arr => arr && arr.length > 0);
             
-            if (hasAnyData) {
+            if (currentTabData && currentTabData.length > 0) {
+                // Jika kategori aktif memiliki data, tampilkan Dashboard, sembunyikan Input
                 document.getElementById('inputSection').classList.add('hidden');
                 document.getElementById('mainDashboard').classList.remove('hidden');
                 renderList();
             } else {
+                // Jika kategori aktif kosong, tampilkan halaman Input, sembunyikan Dashboard
                 document.getElementById('inputSection').classList.remove('hidden');
                 document.getElementById('mainDashboard').classList.add('hidden');
             }
@@ -221,7 +224,7 @@
             checkDisplayMode();
         };
 
-        // --- RENDER SEPARATED LOGIC BUTTONS ---
+        // --- RENDER COMPONENT ---
         function renderList() {
             const list = appState.tabs[appState.currentTab] || [];
             const todayStr = getTodayString();
@@ -234,10 +237,7 @@
             activeCountEl.textContent = totalAktif;
             xCountEl.textContent = totalX;
             
-            if (total === 0) {
-                dataListContainer.innerHTML = `<div class="p-8 text-center text-sm text-slate-400 italic">Kategori ini kosong. Silakan ganti data atau impor file backup.</div>`;
-                return;
-            }
+            if (total === 0) return;
 
             dataListContainer.innerHTML = list.map((item, idx) => {
                 const isCopiedToday = item.lastCopied === todayStr;
@@ -318,33 +318,27 @@
             renderList();
         }
 
-        // --- LOGIKA BACKUP (EXPORT & IMPORT) ---
+        // --- BACKUP MODUL ---
         document.getElementById('btnExport').onclick = () => {
             const dataStr = localStorage.getItem('app_state_stable_v4');
             if (!dataStr) {
-                alert('Gagal mengekspor: Tidak ada data aktif di dalam penyimpanan sistem.');
+                alert('Gagal mengekspor: Tidak ada data aktif di dalam sistem.');
                 return;
             }
-            
             const blob = new Blob([dataStr], { type: "application/json" });
             const url = URL.createObjectURL(blob);
-            
             const anchor = document.createElement('a');
             anchor.href = url;
             anchor.download = `DATAPRO_BACKUP_${getTodayString()}.json`;
             document.body.appendChild(anchor);
             anchor.click();
-            
             document.body.removeChild(anchor);
             URL.revokeObjectURL(url);
         };
 
-        // Fungsi trigger klik input file tersembunyi
-        const handleImportTrigger = () => { document.getElementById('fileImport').click(); };
-        document.getElementById('btnImport').onclick = handleImportTrigger;
-        document.getElementById('btnInitImport').onclick = handleImportTrigger;
+        window.handleImportTrigger = () => { document.getElementById('fileImport').click(); };
+        document.getElementById('btnImport').onclick = window.handleImportTrigger;
 
-        // Proses membaca file backup JSON luar
         document.getElementById('fileImport').onchange = (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -353,25 +347,22 @@
             reader.onload = (event) => {
                 try {
                     const parsedData = JSON.parse(event.target.result);
-                    
-                    // Validasi integritas struktur file backup
                     if (!parsedData.tabs || !parsedData.currentTab) {
-                        alert('Gagal memulihkan: Format dokumen backup kaku/rusak.');
+                        alert('Gagal memulihkan: Format dokumen cadangan salah/rusak.');
                         return;
                     }
-                    
-                    if (confirm('Sistem mendeteksi file cadangan yang valid. Lanjutkan proses penimpaan data lama?')) {
+                    if (confirm('Sistem mendeteksi file cadangan yang utuh. Lanjutkan sinkronisasi ulang data?')) {
                         appState = parsedData;
                         saveState();
                         checkDisplayMode();
-                        alert('SELAMAT! Seluruh data cadangan berhasil dipulihkan secara utuh.');
+                        alert('SELAMAT! Pemulihan sistem berhasil disinkronkan secara total.');
                     }
                 } catch (err) {
-                    alert('Error: File yang Anda unggah bukan format JSON cadangan resmi.');
+                    alert('Error: Dokumen tersebut bukan arsip cadangan resmi.');
                 }
             };
             reader.readAsText(file);
-            e.target.value = ''; // Reset input agar bisa membaca file yang sama berulang kali
+            e.target.value = '';
         };
 
         // --- DASHBOARD ACTIONS ---
@@ -393,19 +384,21 @@
         };
 
         document.getElementById('btnReset').onclick = () => {
-            if (confirm('Reset urutan kategori ini kembali ke struktur awal?')) {
+            if (confirm(`Reset urutan data ${categories[appState.currentTab]} kembali ke struktur awal?`)) {
                 appState.tabs[appState.currentTab] = JSON.parse(JSON.stringify(appState.original[appState.currentTab]));
                 saveState();
                 renderList();
             }
         };
 
+        // PERBAIKAN TOMBOL GANTI DATA: Otomatis melempar user ke halaman input tab aktif tersebut
         document.getElementById('btnClear').onclick = () => {
-            if (confirm('Hapus seluruh data kategori saat ini dan muat data baru?')) {
+            const currentName = categories[appState.currentTab];
+            if (confirm(`Hapus seluruh data kategori [${currentName}]? Tab lainnya TIDAK akan terhapus.`)) {
                 appState.tabs[appState.currentTab] = [];
                 appState.original[appState.currentTab] = [];
                 saveState();
-                checkDisplayMode();
+                checkDisplayMode(); // Layar otomatis mengevaluasi tab yang kosong ini dan menampilkan form input!
             }
         };
 
