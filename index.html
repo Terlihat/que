@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Pro</title>
+    <title>Data Manager Pro - Bersih & Stabil V4</title>
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -46,8 +46,8 @@
             <button onclick="switchTab('verifikasi')" id="tab-verifikasi" class="flex-1 min-w-fit px-4 py-3 rounded-xl text-sm font-medium transition cursor-pointer flex items-center justify-center gap-2 text-slate-500">
                 <i class="fa-solid fa-user-check"></i> Verifikasi
             </button>
-            <button onclick="switchTab('meninggal')" id="tab-meninggal" class="flex-1 min-w-fit px-4 py-3 rounded-xl text-sm font-medium transition cursor-pointer flex items-center justify-center gap-2 text-slate-500">
-                <i class="fa-solid fa-monument"></i> Meninggal
+            <button onclick="switchTab('opsi_lain')" id="tab-opsi_lain" class="flex-1 min-w-fit px-4 py-3 rounded-xl text-sm font-medium transition cursor-pointer flex items-center justify-center gap-2 text-slate-500">
+                <i class="fa-solid fa-bars-staggered"></i> Opsi Lain
             </button>
         </nav>
 
@@ -100,18 +100,18 @@
     </div>
 
     <script>
-        // --- DATA STRUCTURE V3 (STABIL + LOCK HARIAN) ---
+        // --- DATA STRUCTURE V4 (CLEAN REFACTOR) ---
         let appState = {
             currentTab: 'rumah_tangga',
-            tabs: { rumah_tangga: [], usaha_micro: [], verifikasi: [], meninggal: [] },
-            original: { rumah_tangga: [], usaha_micro: [], verifikasi: [], meninggal: [] }
+            tabs: { rumah_tangga: [], usaha_micro: [], verifikasi: [], opsi_lain: [] },
+            original: { rumah_tangga: [], usaha_micro: [], verifikasi: [], opsi_lain: [] }
         };
 
         const categories = {
             rumah_tangga: 'Rumah Tangga',
             usaha_micro: 'Usaha Micro',
             verifikasi: 'Verifikasi',
-            meninggal: 'Meninggal'
+            opsi_lain: 'Opsi Lain'
         };
 
         const saveIndicator = document.getElementById('saveIndicator');
@@ -126,7 +126,8 @@
 
         // --- CORE LOGIC ---
         function initApp() {
-            const saved = localStorage.getItem('app_state_stable_v3');
+            // Menggunakan storage v4 untuk menghindari konflik data lama yang tidak sinkron
+            const saved = localStorage.getItem('app_state_stable_v4');
             if (saved) { appState = JSON.parse(saved); }
             initTheme();
             updateTabUI();
@@ -134,7 +135,7 @@
         }
 
         function saveState() {
-            localStorage.setItem('app_state_stable_v3', JSON.stringify(appState));
+            localStorage.setItem('app_state_stable_v4', JSON.stringify(appState));
             updateTimestamp();
         }
 
@@ -163,10 +164,12 @@
         function updateTabUI() {
             Object.keys(categories).forEach(key => {
                 const btn = document.getElementById(`tab-${key}`);
-                if (key === appState.currentTab) {
-                    btn.className = "flex-1 min-w-fit px-4 py-3 rounded-xl text-sm transition cursor-pointer flex items-center justify-center gap-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold border border-indigo-200 dark:border-indigo-800";
-                } else {
-                    btn.className = "flex-1 min-w-fit px-4 py-3 rounded-xl text-sm transition cursor-pointer flex items-center justify-center gap-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800";
+                if (btn) {
+                    if (key === appState.currentTab) {
+                        btn.className = "flex-1 min-w-fit px-4 py-3 rounded-xl text-sm transition cursor-pointer flex items-center justify-center gap-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold border border-indigo-200 dark:border-indigo-800";
+                    } else {
+                        btn.className = "flex-1 min-w-fit px-4 py-3 rounded-xl text-sm transition cursor-pointer flex items-center justify-center gap-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800";
+                    }
                 }
             });
             inputCategoryName.textContent = categories[appState.currentTab];
@@ -192,7 +195,7 @@
             const lines = text.split('\n')
                               .map(l => l.trim())
                               .filter(l => l.length > 0)
-                              .map(val => ({ val, marked: false, lastCopied: "" })); // Ditambahkan properti tanggal salin
+                              .map(val => ({ val, marked: false, lastCopied: "" }));
 
             appState.tabs[appState.currentTab] = lines;
             appState.original[appState.currentTab] = JSON.parse(JSON.stringify(lines));
@@ -202,7 +205,7 @@
             checkDisplayMode();
         };
 
-        // --- RENDER DENGAN PROTEKSI AUTO-LOCK HARIAN ---
+        // --- RENDER SEPARATED LOGIC BUTTONS ---
         function renderList() {
             const list = appState.tabs[appState.currentTab];
             const todayStr = getTodayString();
@@ -216,9 +219,10 @@
             xCountEl.textContent = totalX;
             
             dataListContainer.innerHTML = list.map((item, idx) => {
-                // Cek apakah data ini sudah disalin pada HARI INI
                 const isCopiedToday = item.lastCopied === todayStr;
-                const isDisabled = item.marked || isCopiedToday;
+                
+                const isSalinDisabled = item.marked || isCopiedToday; 
+                const isPakaiDisabled = item.marked;                  
 
                 return `
                 <div class="group flex items-center justify-between p-4 ${item.marked ? 'marked-item' : (isCopiedToday ? 'copied-today-item' : 'hover:bg-indigo-50/20 dark:hover:bg-indigo-950/10')} transition-all">
@@ -236,15 +240,15 @@
                         
                         <button onclick="copyData('${item.val}', ${idx})" 
                                 class="px-4 py-2 text-xs font-bold rounded-lg border transition cursor-pointer 
-                                ${isDisabled ? 'bg-slate-100 dark:bg-slate-700 border-transparent text-slate-400 dark:text-slate-500 cursor-not-allowed' : 'bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 dark:text-slate-200'}"
-                                ${isDisabled ? 'disabled' : ''}>
+                                ${isSalinDisabled ? 'bg-slate-100 dark:bg-slate-700 border-transparent text-slate-400 dark:text-slate-500 cursor-not-allowed' : 'bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 dark:text-slate-200'}"
+                                ${isSalinDisabled ? 'disabled' : ''}>
                             SALIN
                         </button>
 
                         <button onclick="markUsed(${idx})" 
                                 class="px-4 py-2 text-xs font-bold rounded-lg shadow-sm transition cursor-pointer
-                                ${isDisabled ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed shadow-none' : 'bg-emerald-500 hover:bg-emerald-600 text-white'}"
-                                ${isDisabled ? 'disabled' : ''}>
+                                ${isPakaiDisabled ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed shadow-none' : 'bg-emerald-500 hover:bg-emerald-600 text-white'}"
+                                ${isPakaiDisabled ? 'disabled' : ''}>
                             PAKAI
                         </button>
                     </div>
@@ -269,13 +273,11 @@
             renderList();
         }
 
-        // Fungsi Salin Mengunci Baris Secara Real-Time Hari Ini
         window.copyData = function(val, idx) {
             const list = appState.tabs[appState.currentTab];
             if (list[idx].marked || list[idx].lastCopied === getTodayString()) return; 
 
             navigator.clipboard.writeText(val).then(() => {
-                // Beri Stempel Tanggal Hari Ini saat disalin
                 list[idx].lastCopied = getTodayString();
                 saveState();
                 renderList();
@@ -304,7 +306,6 @@
             
             if (activeItems.length <= 1) return;
             
-            // High Shuffler (Fisher-Yates)
             for (let i = activeItems.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [activeItems[i], activeItems[j]] = [activeItems[j], activeItems[i]];
