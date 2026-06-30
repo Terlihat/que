@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Manager Pro - Versi Logika X</title>
+    <title>Data Manager Pro - Statistik Akurat</title>
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script>
-        // Konfigurasi wajib Tailwind untuk toggle dark mode
         tailwind.config = {
             darkMode: 'class'
         }
@@ -83,8 +82,12 @@
             </div>
 
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-                <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex justify-between items-center">
-                    <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Daftar Angka (<span id="totalCount">0</span>)</span>
+                <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex flex-wrap justify-between items-center gap-4">
+                    <div class="flex flex-wrap gap-x-4 gap-y-2 text-xs font-black uppercase tracking-widest">
+                        <div class="text-slate-400">TOTAL: <span id="totalCount" class="text-indigo-600 dark:text-indigo-400 ml-1">0</span></div>
+                        <div class="text-slate-400 border-l border-slate-300 dark:border-slate-600 pl-4">AKTIF: <span id="activeCount" class="text-emerald-600 dark:text-emerald-400 ml-1">0</span></div>
+                        <div class="text-slate-400 border-l border-slate-300 dark:border-slate-600 pl-4">TANDA X: <span id="xCount" class="text-rose-600 dark:text-rose-400 ml-1">0</span></div>
+                    </div>
                     <span class="text-[11px] text-slate-400 italic">Data X otomatis bergeser paling bawah</span>
                 </div>
                 <div id="dataListContainer" class="divide-y divide-slate-100 dark:divide-slate-700 max-h-[600px] overflow-y-auto">
@@ -117,6 +120,8 @@
         const inputCategoryName = document.getElementById('inputCategoryName');
         const dataListContainer = document.getElementById('dataListContainer');
         const totalCount = document.getElementById('totalCount');
+        const activeCountEl = document.getElementById('activeCount');
+        const xCountEl = document.getElementById('xCount');
         const rawInput = document.getElementById('rawInput');
         const toast = document.getElementById('toast');
         const htmlEl = document.documentElement;
@@ -135,7 +140,6 @@
             updateTimestamp();
         }
 
-        // Format waktu sesuai request: (tanggal waktu DD-MM-YY)
         function updateTimestamp() {
             const now = new Date();
             const d = String(now.getDate()).padStart(2, '0');
@@ -195,10 +199,19 @@
             checkDisplayMode();
         };
 
-        // --- RENDER DENGAN INTEGRASI LOGIKA BARU ---
+        // --- RENDER DENGAN PERHITUNGAN STATISTIK BARU ---
         function renderList() {
             const list = appState.tabs[appState.currentTab];
-            totalCount.textContent = list.length;
+            
+            // Hitung statistik secara real-time
+            const total = list.length;
+            const totalX = list.filter(item => item.marked).length;
+            const totalAktif = total - totalX;
+
+            // Masukkan angka ke UI komponen statistik baru
+            totalCount.textContent = total;
+            activeCountEl.textContent = totalAktif;
+            xCountEl.textContent = totalX;
             
             dataListContainer.innerHTML = list.map((item, idx) => `
                 <div class="group flex items-center justify-between p-4 ${item.marked ? 'marked-item' : 'hover:bg-indigo-50/20 dark:hover:bg-indigo-950/10'} transition-all">
@@ -231,19 +244,15 @@
             `).join('');
         }
 
-        // --- PERUBAHAN LOGIKA MANIPULASI BARIS ---
-
-        // Fungsi Tanda X: Memindahkan langsung ke urutan terbawah absolut
+        // --- ROW ACTIONS ---
         window.toggleMark = function(idx) {
             const list = appState.tabs[appState.currentTab];
-            const item = list.splice(idx, 1)[0]; // Ambil data dari index saat ini
-            item.marked = !item.marked; // Ganti status
+            const item = list.splice(idx, 1)[0];
+            item.marked = !item.marked;
             
             if (item.marked) {
-                // Jika dirubah jadi X, langsung masukkan ke baris paling akhir array
                 list.push(item);
             } else {
-                // Jika tanda X dilepas, pindahkan ke batas bawah data aktif (sebelum data X lainnya)
                 const firstXIdx = list.findIndex(i => i.marked);
                 if (firstXIdx === -1) {
                     list.push(item);
@@ -255,7 +264,6 @@
             renderList();
         }
 
-        // Fungsi Salin
         window.copyData = function(val, isMarked) {
             if (isMarked) return; 
             navigator.clipboard.writeText(val).then(() => {
@@ -264,41 +272,33 @@
             });
         }
 
-        // Fungsi Pakai: Pindah ke posisi bawah, tapi di atas posisi baris X
         window.markUsed = function(idx) {
             const list = appState.tabs[appState.currentTab];
             const item = list.splice(idx, 1)[0];
             
-            // Cari lokasi index pertama dari item bertanda X
             const firstXIdx = list.findIndex(i => i.marked);
             if (firstXIdx === -1) {
-                // Jika tidak ada data bertanda X sama sekali, lempar ke paling bawah
                 list.push(item);
             } else {
-                // Jika ada data X, selipkan tepat di atas baris data X pertama tersebut
                 list.splice(firstXIdx, 0, item);
             }
             saveState();
             renderList();
         }
 
-        // --- TOMBOL AKSI UTAMA GLOBAL ---
-
-        // Mengacak data AKTIF saja (Mengabaikan/tidak merubah posisi data X di bawah)
+        // --- DASHBOARD ACTIONS ---
         document.getElementById('btnShuffle').onclick = () => {
             const list = appState.tabs[appState.currentTab];
             const activeItems = list.filter(i => !i.marked);
             const xItems = list.filter(i => i.marked);
             
-            if (activeItems.length <= 1) return; // Lewati jika tidak ada baris aktif yang bisa diacak
+            if (activeItems.length <= 1) return;
             
-            // Fisher-Yates untuk data aktif saja
             for (let i = activeItems.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [activeItems[i], activeItems[j]] = [activeItems[j], activeItems[i]];
             }
             
-            // Gabungkan kembali: Data Aktif Teracak + Data X yang Tetap Diam di bawah
             appState.tabs[appState.currentTab] = [...activeItems, ...xItems];
             saveState();
             renderList();
@@ -321,7 +321,7 @@
             }
         };
 
-        // --- FIX THEME TOGGLE (100% WORKING LIGHT/DARK) ---
+        // --- THEME TOGGLE ---
         function initTheme() {
             const currentTheme = localStorage.getItem('theme') || 'dark';
             if (currentTheme === 'dark') {
