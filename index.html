@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Manager Pro</title>
-    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link class="shortcut icon" href="favicon.ico" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script>
@@ -151,7 +151,7 @@
             currentTab: 'rumah_tangga',
             tabs: { rumah_tangga: [], usaha_micro: [], verifikasi: [], opsi_lain: [], verif: [] },
             original: { rumah_tangga: [], usaha_micro: [], verifikasi: [], opsi_lain: [], verif: [] },
-            notes: "" // Wadah global catatan yang ikut ter-export otomatis
+            notes: "" 
         };
 
         const categories = {
@@ -190,7 +190,7 @@
             initTheme();
             updateTabUI();
             checkDisplayMode();
-            notesInput.value = appState.notes || ""; // Mengisi kolom catatan saat aplikasi dimuat
+            notesInput.value = appState.notes || ""; 
         }
 
         function saveState() {
@@ -255,7 +255,7 @@
             const lines = text.split('\n')
                               .map(l => l.trim())
                               .filter(l => l.length > 0)
-                              .map(val => ({ val, marked: false, lastCopied: "" }));
+                              .map(val => ({ val, marked: false, highlighted: false, lastCopied: "" }));
 
             appState.tabs[appState.currentTab] = lines;
             appState.original[appState.currentTab] = JSON.parse(JSON.stringify(lines));
@@ -296,8 +296,23 @@
                 const isSalinDisabled = item.marked || isCopiedToday; 
                 const isPakaiDisabled = item.marked;                  
 
+                // Dinamis Mengatur Gaya Tampilan Baris (Termasuk Highlight Baru)
+                let rowClass = "group flex items-center justify-between p-4 transition-all ";
+                if (item.marked) {
+                    rowClass += "marked-item";
+                } else {
+                    if (item.highlighted) {
+                        rowClass += "bg-amber-500/10 dark:bg-amber-500/20 border-l-4 border-amber-500 ";
+                    }
+                    if (isCopiedToday) {
+                        rowClass += "copied-today-item";
+                    } else if (!item.highlighted) {
+                        rowClass += "hover:bg-indigo-50/20 dark:hover:bg-indigo-950/10";
+                    }
+                }
+
                 return `
-                <div class="group flex items-center justify-between p-4 ${item.marked ? 'marked-item' : (isCopiedToday ? 'copied-today-item' : 'hover:bg-indigo-50/20 dark:hover:bg-indigo-950/10')} transition-all">
+                <div class="${rowClass.trim()}">
                     <div class="flex items-center gap-4">
                         <span class="text-[10px] font-mono text-slate-400 dark:text-slate-500 w-6">${idx + 1}</span>
                         <div class="font-mono text-base tracking-widest ${item.marked ? 'marked-text' : (isCopiedToday ? 'text-emerald-600 dark:text-emerald-400 line-through opacity-60' : 'text-slate-700 dark:text-slate-200')} select-all">
@@ -306,6 +321,10 @@
                         ${isCopiedToday ? '<span class="text-[9px] px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold uppercase tracking-wider"><i class="fa-solid fa-check-double mr-1"></i>Selesai Hari Ini</span>' : ''}
                     </div>
                     <div class="flex gap-2">
+                        <button onclick="toggleHighlight(${idx})" class="w-10 h-10 flex items-center justify-center rounded-lg border ${item.highlighted ? 'bg-amber-500 border-amber-500 text-white shadow-md shadow-amber-500/20' : 'border-slate-300 dark:border-slate-600 text-slate-400 hover:border-amber-500 hover:text-amber-500'} transition cursor-pointer" title="Beri Penanda Warna">
+                            <i class="fa-solid fa-highlighter text-sm"></i>
+                        </button>
+
                         <button onclick="toggleMark(${idx})" class="w-10 h-10 flex items-center justify-center rounded-lg border ${item.marked ? 'bg-rose-600 border-rose-600 text-white shadow-md shadow-rose-500/20' : 'border-slate-300 dark:border-slate-600 text-slate-400 hover:border-rose-500 hover:text-rose-500'} transition cursor-pointer" title="Beri Tanda X">
                             <i class="fa-solid fa-xmark text-sm"></i>
                         </button>
@@ -329,6 +348,14 @@
         }
 
         // --- LINE MANIPULATION ---
+        window.toggleHighlight = function(idx) {
+            const list = appState.tabs[appState.currentTab];
+            // Mengubah status penanda warna (True / False) secara bergantian saat diklik
+            list[idx].highlighted = !list[idx].highlighted;
+            saveState();
+            renderList();
+        }
+
         window.toggleMark = function(idx) {
             const list = appState.tabs[appState.currentTab];
             const item = list.splice(idx, 1)[0];
@@ -379,7 +406,7 @@
 
         notesInput.oninput = (e) => {
             appState.notes = e.target.value;
-            saveState(); // Otomatis tersimpan real-time ke localStorage & siap diexport kapan saja
+            saveState(); 
         };
 
         // --- LOGIKA TOGGLE INPUT PENCARIAN ---
@@ -457,7 +484,7 @@
                         if (parsedData.notes === undefined) parsedData.notes = "";
                         
                         appState = parsedData;
-                        notesInput.value = appState.notes; // Memulihkan teks catatan dari file json
+                        notesInput.value = appState.notes; 
                         saveState();
                         closeAndClearSearch();
                         checkDisplayMode();
