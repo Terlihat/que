@@ -80,6 +80,9 @@
                     <button id="btnReset" class="p-3 bg-blue-100 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 rounded-xl border border-blue-200 dark:border-blue-900 transition hover:scale-105 cursor-pointer" title="Reset Urutan">
                         <i class="fa-solid fa-rotate-left"></i> <span class="text-xs font-bold ml-1 hidden sm:inline">RESET</span>
                     </button>
+                    <button id="btnToggleNotes" class="p-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl border border-slate-200 dark:border-slate-700 transition hover:scale-105 cursor-pointer hover:text-indigo-500 dark:hover:text-indigo-400" title="Buka Catatan Digit">
+                        <i class="fa-regular fa-clipboard"></i> <span class="text-xs font-bold ml-1 hidden sm:inline">CATATAN</span>
+                    </button>
                     <button id="btnToggleSearch" class="p-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl border border-slate-200 dark:border-slate-700 transition hover:scale-105 cursor-pointer hover:text-indigo-500 dark:hover:text-indigo-400" title="Cari Data">
                         <i class="fa-solid fa-magnifying-glass"></i>
                     </button>
@@ -97,6 +100,18 @@
                     <button id="btnClear" class="w-full sm:w-auto px-5 py-3 bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 font-bold rounded-xl border border-rose-100 dark:border-rose-900 transition hover:bg-rose-600 hover:text-white cursor-pointer text-xs">
                         <i class="fa-solid fa-trash-can mr-1.5"></i> GANTI DATA
                     </button>
+                </div>
+            </div>
+
+            <div id="notesContainer" class="hidden mb-4 transition-all duration-200">
+                <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner">
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label for="notesInput" class="text-[11px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-pen-to-square text-indigo-500"></i> MEMO / DIGIT TERAKHIR YANG DISALIN
+                        </label>
+                        <span class="text-[10px] text-slate-400 italic">Otomatis Tersimpan</span>
+                    </div>
+                    <textarea id="notesInput" rows="2" class="w-full p-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 focus:ring-4 focus:ring-indigo-500/20 focus:outline-none font-mono text-sm text-slate-900 dark:text-white" placeholder="Ketik digit atau catatan penting Anda di sini agar tidak lupa..."></textarea>
                 </div>
             </div>
 
@@ -131,11 +146,12 @@
     </div>
 
     <script>
-        // --- DATA STRUCTURE MANAGEMENT V4.4 ---
+        // --- DATA STRUCTURE MANAGEMENT V4.5 ---
         let appState = {
             currentTab: 'rumah_tangga',
             tabs: { rumah_tangga: [], usaha_micro: [], verifikasi: [], opsi_lain: [], verif: [] },
-            original: { rumah_tangga: [], usaha_micro: [], verifikasi: [], opsi_lain: [], verif: [] }
+            original: { rumah_tangga: [], usaha_micro: [], verifikasi: [], opsi_lain: [], verif: [] },
+            notes: "" // Wadah global catatan yang ikut ter-export otomatis
         };
 
         const categories = {
@@ -146,7 +162,7 @@
             verif: 'Verif'
         };
 
-        let searchQuery = ''; // Variabel global filter pencarian
+        let searchQuery = '';
 
         const saveIndicator = document.getElementById('saveIndicator');
         const inputCategoryName = document.getElementById('inputCategoryName');
@@ -157,6 +173,7 @@
         const rawInput = document.getElementById('rawInput');
         const toast = document.getElementById('toast');
         const htmlEl = document.documentElement;
+        const notesInput = document.getElementById('notesInput');
 
         // --- ENGINE LOGIC ---
         function initApp() {
@@ -166,12 +183,14 @@
                 if (parsed.tabs) {
                     if (!parsed.tabs.verif) parsed.tabs.verif = [];
                     if (!parsed.original.verif) parsed.original.verif = [];
+                    if (parsed.notes === undefined) parsed.notes = "";
                     appState = parsed;
                 }
             }
             initTheme();
             updateTabUI();
             checkDisplayMode();
+            notesInput.value = appState.notes || ""; // Mengisi kolom catatan saat aplikasi dimuat
         }
 
         function saveState() {
@@ -196,7 +215,7 @@
         // --- NAVIGATION BAR ---
         window.switchTab = function(tabKey) {
             appState.currentTab = tabKey;
-            closeAndClearSearch(); // Reset pencarian saat pindah tab agar tidak membingungkan
+            closeAndClearSearch();
             updateTabUI();
             checkDisplayMode();
             saveState();
@@ -246,7 +265,7 @@
             checkDisplayMode();
         };
 
-        // --- RENDERING CORE (DENGAN INTEGRASI FILTER PENCARIAN AMAN) ---
+        // --- RENDERING CORE ---
         function renderList() {
             const list = appState.tabs[appState.currentTab] || [];
             const todayStr = getTodayString();
@@ -261,10 +280,7 @@
             
             if (total === 0) return;
 
-            // Proses pemetaan data bersama indeks aslinya agar aksi tombol tidak salah sasaran
             const itemsWithOriginalIndex = list.map((item, originalIdx) => ({ item, originalIdx }));
-            
-            // Filter real-time kata kunci pencarian
             const query = searchQuery.toLowerCase().trim();
             const filteredItems = itemsWithOriginalIndex.filter(obj => obj.item.val.toLowerCase().includes(query));
 
@@ -275,7 +291,7 @@
 
             dataListContainer.innerHTML = filteredItems.map((obj) => {
                 const item = obj.item;
-                const idx = obj.originalIdx; // Menggunakan indeks konstan array asli
+                const idx = obj.originalIdx;
                 const isCopiedToday = item.lastCopied === todayStr;
                 const isSalinDisabled = item.marked || isCopiedToday; 
                 const isPakaiDisabled = item.marked;                  
@@ -354,32 +370,38 @@
             renderList();
         }
 
+        // --- LOGIKA TOGGLE & REALTIME CATATAN ---
+        document.getElementById('btnToggleNotes').onclick = () => {
+            const container = document.getElementById('notesContainer');
+            const isHidden = container.classList.toggle('hidden');
+            if (!isHidden) { notesInput.focus(); }
+        };
+
+        notesInput.oninput = (e) => {
+            appState.notes = e.target.value;
+            saveState(); // Otomatis tersimpan real-time ke localStorage & siap diexport kapan saja
+        };
+
         // --- LOGIKA TOGGLE INPUT PENCARIAN ---
         document.getElementById('btnToggleSearch').onclick = () => {
             const container = document.getElementById('searchContainer');
             const isHidden = container.classList.toggle('hidden');
-            
             if (!isHidden) {
                 const input = document.getElementById('searchInput');
-                input.focus(); // Otomatis fokus ke kolom teks saat dibuka
+                input.focus();
             } else {
                 closeAndClearSearch();
             }
         };
 
-        // Real-time input listener
         document.getElementById('searchInput').oninput = (e) => {
             searchQuery = e.target.value;
             const btnClearSearch = document.getElementById('btnClearSearch');
-            if (searchQuery) {
-                btnClearSearch.classList.remove('hidden');
-            } else {
-                btnClearSearch.classList.add('hidden');
-            }
+            if (searchQuery) { btnClearSearch.classList.remove('hidden'); } 
+            else { btnClearSearch.classList.add('hidden'); }
             renderList();
         };
 
-        // Tombol bersihkan pencarian (X)
         document.getElementById('btnClearSearch').onclick = () => {
             document.getElementById('searchInput').value = '';
             searchQuery = '';
@@ -432,12 +454,14 @@
                     if (confirm('Sistem mendeteksi file cadangan yang utuh. Lanjutkan sinkronisasi ulang data?')) {
                         if (!parsedData.tabs.verif) parsedData.tabs.verif = [];
                         if (!parsedData.original.verif) parsedData.original.verif = [];
+                        if (parsedData.notes === undefined) parsedData.notes = "";
                         
                         appState = parsedData;
+                        notesInput.value = appState.notes; // Memulihkan teks catatan dari file json
                         saveState();
                         closeAndClearSearch();
                         checkDisplayMode();
-                        alert('SELAMAT! Pemulihan sistem berhasil disinkronkan secara total.');
+                        alert('SELAMAT! Pemulihan sistem berhasil disinkronkan secara total beserta catatan Anda.');
                     }
                 } catch (err) {
                     alert('Error: Dokumen tersebut bukan arsip cadangan resmi.');
