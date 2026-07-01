@@ -38,60 +38,76 @@
 
         <nav class="flex overflow-x-auto gap-1 mb-6 bg-white dark:bg-slate-800 p-1.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
             <button onclick="switchTab('rumah_tangga')" id="tab-rumah_tangga" class="flex-1 min-w-fit px-4 py-3 rounded-xl text-sm font-medium transition cursor-pointer flex items-center justify-center gap-2">
-                <i class="fa-solid fa-house"></i> Rumah Tangga
+                <i class="fa-solid fa-house"></i> RT I
             </button>
             <button onclick="switchTab('usaha_micro')" id="tab-usaha_micro" class="flex-1 min-w-fit px-4 py-3 rounded-xl text-sm font-medium transition cursor-pointer flex items-center justify-center gap-2 text-slate-500">
-                <i class="fa-solid fa-shop"></i> Usaha Micro
+                <i class="fa-solid fa-shop"></i> UM I
             </button>
             <button onclick="switchTab('verifikasi')" id="tab-verifikasi" class="flex-1 min-w-fit px-4 py-3 rounded-xl text-sm font-medium transition cursor-pointer flex items-center justify-center gap-2 text-slate-500">
-                <i class="fa-solid fa-user-check"></i> Verifikasi
+                <i class="fa-solid fa-house-user"></i> RT II
             </button>
             <button onclick="switchTab('opsi_lain')" id="tab-opsi_lain" class="flex-1 min-w-fit px-4 py-3 rounded-xl text-sm font-medium transition cursor-pointer flex items-center justify-center gap-2 text-slate-500">
-                <i class="fa-solid fa-bars-staggered"></i> Opsi Lain
+                <i class="fa-solid fa-store"></i> UM II
+            </button>
+            <button onclick="switchTab('verif')" id="tab-verif" class="flex-1 min-w-fit px-4 py-3 rounded-xl text-sm font-medium transition cursor-pointer flex items-center justify-center gap-2 text-slate-500">
+                <i class="fa-solid fa-user-check"></i> Verif
             </button>
         </nav>
 
         <div id="inputSection" class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 mb-6 transition-all">
-            <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
-                <div class="flex items-center gap-2">
-                    <div class="w-2 h-6 bg-indigo-500 rounded-full"></div>
-                    <h2 class="text-lg font-bold">Input Data <span id="inputCategoryName" class="text-indigo-500 italic">Rumah Tangga</span></h2>
-                </div>
-                <button onclick="handleImportTrigger()" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">
-                    <i class="fa-solid fa-upload mr-1"></i> Punya file cadangan (.json)? Impor di sini
-                </button>
+            <div class="flex items-center gap-2 mb-4">
+                <div class="w-2 h-6 bg-indigo-500 rounded-full"></div>
+                <h2 class="text-lg font-bold">Input Data <span id="inputCategoryName" class="text-indigo-500 italic">RT I</span></h2>
             </div>
             <textarea id="rawInput" rows="6" class="w-full p-4 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 focus:ring-4 focus:ring-indigo-500/20 focus:outline-none font-mono text-sm dark:text-white text-slate-900" placeholder="Tempel data baris untuk kategori ini di sini..."></textarea>
             
-            <div class="flex flex-wrap gap-3 mt-4">
-                <button id="btnLoadData" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/30 transition cursor-pointer active:scale-95 text-sm">
-                    MUAT DATA KATEGORI INI
+            <div class="flex flex-wrap sm:flex-nowrap justify-between gap-3 mt-4">
+                <button id="btnLoadData" class="w-full sm:w-auto px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/30 transition cursor-pointer active:scale-95 text-sm">
+                    MUAT DATA
+                </button>
+                <button id="btnInitImport" onclick="handleImportTrigger()" class="w-full sm:w-auto px-5 py-3 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition cursor-pointer text-xs flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700">
+                    <i class="fa-solid fa-upload text-indigo-500"></i> Punya file cadangan (.json)? Impor di sini
                 </button>
             </div>
         </div>
 
         <div id="mainDashboard" class="hidden">
-            <div class="flex flex-wrap gap-4 justify-between items-center mb-6">
+            <div class="flex flex-wrap gap-4 justify-between items-center mb-4">
                 <div class="flex gap-2">
-                    <button id="btnShuffle" class="p-3 bg-amber-100 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 rounded-xl border border-amber-200 dark:border-amber-900 transition hover:scale-105 cursor-pointer" title="Acak Baris Aktif">
+                    <button id="btnShuffle" class="p-3 bg-amber-100 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 rounded-xl border border-amber-200 dark:border-amber-900 transition hover:scale-105 cursor-pointer" title="Acak Baris">
                         <i class="fa-solid fa-shuffle"></i> <span class="text-xs font-bold ml-1 hidden sm:inline">ACAK</span>
                     </button>
-                    <button id="btnReset" class="p-3 bg-blue-100 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 rounded-xl border border-blue-200 dark:border-blue-900 transition hover:scale-105 cursor-pointer" title="Reset ke Urutan Awal">
+                    <button id="btnReset" class="p-3 bg-blue-100 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 rounded-xl border border-blue-200 dark:border-blue-900 transition hover:scale-105 cursor-pointer" title="Reset Urutan">
                         <i class="fa-solid fa-rotate-left"></i> <span class="text-xs font-bold ml-1 hidden sm:inline">RESET</span>
+                    </button>
+                    <button id="btnToggleSearch" class="p-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl border border-slate-200 dark:border-slate-700 transition hover:scale-105 cursor-pointer hover:text-indigo-500 dark:hover:text-indigo-400" title="Cari Data">
+                        <i class="fa-solid fa-magnifying-glass"></i>
                     </button>
                 </div>
                 
                 <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                    <button id="btnExport" class="flex-1 sm:flex-none px-4 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-xl border border-slate-200 dark:border-slate-700 transition cursor-pointer text-xs" title="Amankan seluruh sistem ke file komputer">
+                    <button id="btnExport" class="flex-1 sm:flex-none px-4 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-xl border border-slate-200 dark:border-slate-700 transition cursor-pointer text-xs">
                         <i class="fa-solid fa-download mr-1.5 text-emerald-500"></i> EXPORT
                     </button>
-                    <button id="btnImport" class="flex-1 sm:flex-none px-4 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-xl border border-slate-200 dark:border-slate-700 transition cursor-pointer text-xs" title="Muat file cadangan global">
+                    <button id="btnImport" class="flex-1 sm:flex-none px-4 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-xl border border-slate-200 dark:border-slate-700 transition cursor-pointer text-xs">
                         <i class="fa-solid fa-upload mr-1.5 text-indigo-500"></i> IMPORT
                     </button>
                     <input type="file" id="fileImport" class="hidden" accept=".json">
 
                     <button id="btnClear" class="w-full sm:w-auto px-5 py-3 bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 font-bold rounded-xl border border-rose-100 dark:border-rose-900 transition hover:bg-rose-600 hover:text-white cursor-pointer text-xs">
                         <i class="fa-solid fa-trash-can mr-1.5"></i> GANTI DATA
+                    </button>
+                </div>
+            </div>
+
+            <div id="searchContainer" class="hidden mb-4 transition-all duration-200">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                    </span>
+                    <input type="text" id="searchInput" class="w-full pl-10 pr-10 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-4 focus:ring-indigo-500/20 focus:outline-none text-sm dark:text-white text-slate-900 font-mono tracking-wider" placeholder="Ketik kata kunci untuk mencari data...">
+                    <button id="btnClearSearch" class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-rose-500 transition hidden">
+                        <i class="fa-solid fa-circle-xmark"></i>
                     </button>
                 </div>
             </div>
@@ -105,8 +121,7 @@
                     </div>
                     <span class="text-[11px] text-slate-400 italic">Data X otomatis bergeser paling bawah</span>
                 </div>
-                <div id="dataListContainer" class="divide-y divide-slate-100 dark:divide-slate-700 max-h-[600px] overflow-y-auto">
-                    </div>
+                <div id="dataListContainer" class="divide-y divide-slate-100 dark:divide-slate-700 max-h-[600px] overflow-y-auto"></div>
             </div>
         </div>
 
@@ -116,19 +131,22 @@
     </div>
 
     <script>
-        // --- DATA STRUCTURE V4.2 ---
+        // --- DATA STRUCTURE MANAGEMENT V4.4 ---
         let appState = {
             currentTab: 'rumah_tangga',
-            tabs: { rumah_tangga: [], usaha_micro: [], verifikasi: [], opsi_lain: [] },
-            original: { rumah_tangga: [], usaha_micro: [], verifikasi: [], opsi_lain: [] }
+            tabs: { rumah_tangga: [], usaha_micro: [], verifikasi: [], opsi_lain: [], verif: [] },
+            original: { rumah_tangga: [], usaha_micro: [], verifikasi: [], opsi_lain: [], verif: [] }
         };
 
         const categories = {
-            rumah_tangga: 'Rumah Tangga',
-            usaha_micro: 'Usaha Micro',
-            verifikasi: 'Verifikasi',
-            opsi_lain: 'Opsi Lain'
+            rumah_tangga: 'RT I',
+            usaha_micro: 'UM I',
+            verifikasi: 'RT II',
+            opsi_lain: 'UM II',
+            verif: 'Verif'
         };
+
+        let searchQuery = ''; // Variabel global filter pencarian
 
         const saveIndicator = document.getElementById('saveIndicator');
         const inputCategoryName = document.getElementById('inputCategoryName');
@@ -140,10 +158,17 @@
         const toast = document.getElementById('toast');
         const htmlEl = document.documentElement;
 
-        // --- CORE LOGIC ---
+        // --- ENGINE LOGIC ---
         function initApp() {
             const saved = localStorage.getItem('app_state_stable_v4');
-            if (saved) { appState = JSON.parse(saved); }
+            if (saved) { 
+                const parsed = JSON.parse(saved);
+                if (parsed.tabs) {
+                    if (!parsed.tabs.verif) parsed.tabs.verif = [];
+                    if (!parsed.original.verif) parsed.original.verif = [];
+                    appState = parsed;
+                }
+            }
             initTheme();
             updateTabUI();
             checkDisplayMode();
@@ -168,11 +193,12 @@
             saveIndicator.textContent = `Penyimpanan Otomatis Aktif (${getTodayString()} ${time})`;
         }
 
-        // --- NAVIGATION LOGIC ---
+        // --- NAVIGATION BAR ---
         window.switchTab = function(tabKey) {
             appState.currentTab = tabKey;
+            closeAndClearSearch(); // Reset pencarian saat pindah tab agar tidak membingungkan
             updateTabUI();
-            checkDisplayMode(); // Memeriksa ketersediaan data khusus untuk tab baru yang dibuka
+            checkDisplayMode();
             saveState();
         }
 
@@ -190,23 +216,19 @@
             inputCategoryName.textContent = categories[appState.currentTab];
         }
 
-        // PERBAIKAN UTAMA: Mengisolasi deteksi layar berdasarkan kategori aktif saja!
         function checkDisplayMode() {
             const currentTabData = appState.tabs[appState.currentTab];
-            
             if (currentTabData && currentTabData.length > 0) {
-                // Jika kategori aktif memiliki data, tampilkan Dashboard, sembunyikan Input
                 document.getElementById('inputSection').classList.add('hidden');
                 document.getElementById('mainDashboard').classList.remove('hidden');
                 renderList();
             } else {
-                // Jika kategori aktif kosong, tampilkan halaman Input, sembunyikan Dashboard
                 document.getElementById('inputSection').classList.remove('hidden');
                 document.getElementById('mainDashboard').classList.add('hidden');
             }
         }
 
-        // --- DATA INPUT ---
+        // --- INPUT PROCESSING ---
         document.getElementById('btnLoadData').onclick = () => {
             const text = rawInput.value.trim();
             if (!text) return;
@@ -224,7 +246,7 @@
             checkDisplayMode();
         };
 
-        // --- RENDER COMPONENT ---
+        // --- RENDERING CORE (DENGAN INTEGRASI FILTER PENCARIAN AMAN) ---
         function renderList() {
             const list = appState.tabs[appState.currentTab] || [];
             const todayStr = getTodayString();
@@ -239,7 +261,21 @@
             
             if (total === 0) return;
 
-            dataListContainer.innerHTML = list.map((item, idx) => {
+            // Proses pemetaan data bersama indeks aslinya agar aksi tombol tidak salah sasaran
+            const itemsWithOriginalIndex = list.map((item, originalIdx) => ({ item, originalIdx }));
+            
+            // Filter real-time kata kunci pencarian
+            const query = searchQuery.toLowerCase().trim();
+            const filteredItems = itemsWithOriginalIndex.filter(obj => obj.item.val.toLowerCase().includes(query));
+
+            if (filteredItems.length === 0 && query !== '') {
+                dataListContainer.innerHTML = `<div class="p-8 text-center text-sm text-slate-400 italic">Tidak ada data yang cocok dengan "${searchQuery}"</div>`;
+                return;
+            }
+
+            dataListContainer.innerHTML = filteredItems.map((obj) => {
+                const item = obj.item;
+                const idx = obj.originalIdx; // Menggunakan indeks konstan array asli
                 const isCopiedToday = item.lastCopied === todayStr;
                 const isSalinDisabled = item.marked || isCopiedToday; 
                 const isPakaiDisabled = item.marked;                  
@@ -276,7 +312,7 @@
             `}).join('');
         }
 
-        // --- ROW ACTIONS ---
+        // --- LINE MANIPULATION ---
         window.toggleMark = function(idx) {
             const list = appState.tabs[appState.currentTab];
             const item = list.splice(idx, 1)[0];
@@ -318,7 +354,49 @@
             renderList();
         }
 
-        // --- BACKUP MODUL ---
+        // --- LOGIKA TOGGLE INPUT PENCARIAN ---
+        document.getElementById('btnToggleSearch').onclick = () => {
+            const container = document.getElementById('searchContainer');
+            const isHidden = container.classList.toggle('hidden');
+            
+            if (!isHidden) {
+                const input = document.getElementById('searchInput');
+                input.focus(); // Otomatis fokus ke kolom teks saat dibuka
+            } else {
+                closeAndClearSearch();
+            }
+        };
+
+        // Real-time input listener
+        document.getElementById('searchInput').oninput = (e) => {
+            searchQuery = e.target.value;
+            const btnClearSearch = document.getElementById('btnClearSearch');
+            if (searchQuery) {
+                btnClearSearch.classList.remove('hidden');
+            } else {
+                btnClearSearch.classList.add('hidden');
+            }
+            renderList();
+        };
+
+        // Tombol bersihkan pencarian (X)
+        document.getElementById('btnClearSearch').onclick = () => {
+            document.getElementById('searchInput').value = '';
+            searchQuery = '';
+            document.getElementById('btnClearSearch').classList.add('hidden');
+            renderList();
+            document.getElementById('searchInput').focus();
+        };
+
+        function closeAndClearSearch() {
+            document.getElementById('searchInput').value = '';
+            searchQuery = '';
+            document.getElementById('btnClearSearch').classList.add('hidden');
+            document.getElementById('searchContainer').classList.add('hidden');
+            renderList();
+        }
+
+        // --- ARCHIVE ENGINE ---
         document.getElementById('btnExport').onclick = () => {
             const dataStr = localStorage.getItem('app_state_stable_v4');
             if (!dataStr) {
@@ -352,8 +430,12 @@
                         return;
                     }
                     if (confirm('Sistem mendeteksi file cadangan yang utuh. Lanjutkan sinkronisasi ulang data?')) {
+                        if (!parsedData.tabs.verif) parsedData.tabs.verif = [];
+                        if (!parsedData.original.verif) parsedData.original.verif = [];
+                        
                         appState = parsedData;
                         saveState();
+                        closeAndClearSearch();
                         checkDisplayMode();
                         alert('SELAMAT! Pemulihan sistem berhasil disinkronkan secara total.');
                     }
@@ -365,7 +447,7 @@
             e.target.value = '';
         };
 
-        // --- DASHBOARD ACTIONS ---
+        // --- CONTROLS ---
         document.getElementById('btnShuffle').onclick = () => {
             const list = appState.tabs[appState.currentTab];
             const activeItems = list.filter(i => !i.marked);
@@ -391,18 +473,18 @@
             }
         };
 
-        // PERBAIKAN TOMBOL GANTI DATA: Otomatis melempar user ke halaman input tab aktif tersebut
         document.getElementById('btnClear').onclick = () => {
             const currentName = categories[appState.currentTab];
             if (confirm(`Hapus seluruh data kategori [${currentName}]? Tab lainnya TIDAK akan terhapus.`)) {
                 appState.tabs[appState.currentTab] = [];
                 appState.original[appState.currentTab] = [];
                 saveState();
-                checkDisplayMode(); // Layar otomatis mengevaluasi tab yang kosong ini dan menampilkan form input!
+                closeAndClearSearch();
+                checkDisplayMode();
             }
         };
 
-        // --- THEME TOGGLE ---
+        // --- GRAPHICS & CONTRAST ---
         function initTheme() {
             const currentTheme = localStorage.getItem('theme') || 'dark';
             if (currentTheme === 'dark') { htmlEl.classList.add('dark'); } 
